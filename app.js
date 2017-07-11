@@ -27,8 +27,52 @@ const users = sequelize.define('users', {
   },
   username: {
     type: Sequelize.STRING
+  },
+  userId: {
+    type: Sequelize.STRING,
+    allowNull: false
   }
 });
+
+const articles = sequelize.define('articles', {
+  articleId: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  userId: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  title: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  description: {
+    type: Sequelize.STRING
+  }
+  fileURL: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+});
+
+const comments = sequelize.define('comments', {
+  commentId: {
+    type: Sequelize.STRING
+  },
+  userId: {
+    type: Sequelize.STRING
+  },
+  artcileId: {
+    type: Sequelize.STRING
+  },
+  content: {
+    type: Sequelize.TEXT
+  },
+  time: {
+    type: Sequelize.DATE
+  }
+})
 
 app.get('/sqlTest', function (req, res){
 	sequelize
