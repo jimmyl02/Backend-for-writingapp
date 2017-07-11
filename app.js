@@ -49,7 +49,7 @@ const articles = sequelize.define('articles', {
   },
   description: {
     type: Sequelize.STRING
-  }
+  },
   fileURL: {
     type: Sequelize.STRING,
     allowNull: false
@@ -60,10 +60,10 @@ const comments = sequelize.define('comments', {
   commentId: {
     type: Sequelize.STRING
   },
-  userId: {
+  articleId: {
     type: Sequelize.STRING
   },
-  artcileId: {
+  userId: {
     type: Sequelize.STRING
   },
   content: {
@@ -71,9 +71,15 @@ const comments = sequelize.define('comments', {
   },
   time: {
     type: Sequelize.DATE
-  }
+  },
 })
 
+sequelize.sync();
+//sequelize.sync({ force: true });
+//Used to update database when making modifications to tables
+//TODO REMOVE FORCE BEFORE IT IS IN PRODUCTION
+
+//Test sql connection to database
 app.get('/sqlTest', function (req, res){
 	sequelize
 	  .authenticate()
@@ -88,16 +94,52 @@ app.get('/sqlTest', function (req, res){
 })
 
 app.get('/api/v1/articles/:articleId', function (req, res) {
-  res.send('hello world')
+  const reqArticleId = req.params.articleId;
+  articles.findAll({ where: { articleId: reqArticleId } }).then(article => {
+    //Returns article with specified id as in route
+    if(article.length > 0){
+      res.json(article);
+    }else{
+      res.json(null);
+    }
+  })
 })
 
 app.get('/api/v1/comments/:articleId', function (req, res) {
-  res.send('hello world')
+  const reqArticleId = req.params.articleId;
+  comments.findAll({ where: { articleId: reqArticleId } }).then(comments => {
+    //Returns all comments associated with articleId
+    if(comments.length > 0){
+      res.json(comments);
+    }else{
+      res.json(null);
+    }
+  })
 })
 
 app.get('/api/v1/users/articles/:userId', function (req, res) {
-  res.send('hello world')
+  const reqUserId = req.params.userId;
+  articles.findAll({ where: { userId: reqUserId } }).then(articles => {
+    if(articles.length > 0){
+      res.json(articles);
+    }else{
+      res.json(null);
+    }
+  })
 })
+
+app.get('/api/v1/users/comments/:userId', function (req, res) {
+  const reqUserId = req.params.userId;
+  comments.findAll({ where: { userId: reqUserId } }).then(comments => {
+    if(comments.length > 0){
+      res.json(comments);
+    }else{
+      res.json(null);
+    }
+  })
+})
+
+//Create post routes
 
 app.listen(3000, function () {
   console.log('Listening on port 3000')
