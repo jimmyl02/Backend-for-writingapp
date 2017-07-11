@@ -35,4 +35,5 @@ app.get('/api/v1/articles', function (req, res) {
 app.listen(3000, function () {
   console.log('Listening on port 3000')
   console.log('tmp text')
+  console.log('tmp text 2')
 })
