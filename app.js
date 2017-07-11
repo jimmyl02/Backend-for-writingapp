@@ -36,5 +36,4 @@ app.listen(3000, function () {
   console.log('Listening on port 3000')
   console.log('tmp text')
   console.log('tmp text 2')
-  console.log('tmp text 3')
 })
