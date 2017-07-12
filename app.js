@@ -142,6 +142,8 @@ app.get('/api/v1/users/comments/:userId', function (req, res) {
   })
 })
 
+//Create post routes
+
 genCommentIdAndCreate = (inArticleId, inUserId, inContent) => {
   return new Promise((resolve, reject) => {
     const newId = shortid.generate();
@@ -161,7 +163,6 @@ genCommentIdAndCreate = (inArticleId, inUserId, inContent) => {
   })
 }
 
-//Create post routes
 app.post('/api/v1/comments/addComment', function (req, res) {
   //Add comment to article
   const body = req.body;
