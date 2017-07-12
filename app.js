@@ -100,7 +100,7 @@ app.get('/api/v1/articles/:articleId', function (req, res) {
     if(article.length > 0){
       res.json(article);
     }else{
-      res.json(null);
+      res.status(404).send({});
     }
   })
 })
@@ -112,7 +112,7 @@ app.get('/api/v1/comments/:articleId', function (req, res) {
     if(comments.length > 0){
       res.json(comments);
     }else{
-      res.json(null);
+      res.status(404).send({});
     }
   })
 })
@@ -123,7 +123,7 @@ app.get('/api/v1/users/articles/:userId', function (req, res) {
     if(articles.length > 0){
       res.json(articles);
     }else{
-      res.json(null);
+      res.status(404).send({});
     }
   })
 })
@@ -134,12 +134,22 @@ app.get('/api/v1/users/comments/:userId', function (req, res) {
     if(comments.length > 0){
       res.json(comments);
     }else{
-      res.json(null);
+      res.status(404).send({});
     }
   })
 })
 
 //Create post routes
+app.post('/api/v1/articles/addComment', function (req, res) {
+  //Add comment to article
+  const body = JSON.parse(req.body);
+  //Required info check
+  if(body.hasOwnProperty('articleId') && body.hasOwnProperty('commentId') && body.hasOwnProperty('userId') && body.hasOwnProperty('content')){
+    
+  }else{
+
+  }
+})
 
 app.listen(3000, function () {
   console.log('Listening on port 3000')
