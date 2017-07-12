@@ -1,8 +1,11 @@
 require('dotenv').config()
 const express = require('express');
 const Sequelize = require('sequelize');
+const bodyParser = require('body-parser');
+const shortid = require('shortid');
 
 const app = express();
+app.use(bodyParser.json())
 
 
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS, {
@@ -139,15 +142,37 @@ app.get('/api/v1/users/comments/:userId', function (req, res) {
   })
 })
 
-//Create post routes
-app.post('/api/v1/articles/addComment', function (req, res) {
-  //Add comment to article
-  const body = JSON.parse(req.body);
-  //Required info check
-  if(body.hasOwnProperty('articleId') && body.hasOwnProperty('commentId') && body.hasOwnProperty('userId') && body.hasOwnProperty('content')){
-    
-  }else{
+genCommentIdAndCreate = (inArticleId, inUserId, inContent) => {
+  return new Promise((resolve, reject) => {
+    const newId = shortid.generate();
+    comments.findOrCreate({ 
+      //Find if comment ID exist
+      where: { commentId: newId }, 
+      //Set things if it doesn't exist
+      defaults: { articleId: inArticleId, userId: inUserId, content: inContent } }).spread((comment, created) => {
+        if(created){
+          //Successfully created ID
+          resolve(newId);
+        }else{
+          //Generation failed
+          genCommentIdAndCreate(inArticleId, inUserId, inContent);
+        }
+    })
+  })
+}
 
+//Create post routes
+app.post('/api/v1/comments/addComment', function (req, res) {
+  //Add comment to article
+  const body = req.body;
+  //Required info check
+  if(body.hasOwnProperty('articleId') && body.hasOwnProperty('userId') && body.hasOwnProperty('content')){
+    //Generate commentId in backend, return commentId
+    genCommentIdAndCreate(body.articleId, body.userId, body.content).then((newId) => {
+      res.json({ commentId: newId });
+    })
+  }else{
+    res.status(400).send({ 'error': 'You must include in body: aricleId, commentId, userId, and content' });
   }
 })
 
