@@ -20,16 +20,20 @@ const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, proces
 
 const users = sequelize.define('users', {
   firstName: {
-    type: Sequelize.STRING
+    type: Sequelize.STRING,
+    allowNull: false
   },
   lastName: {
-    type: Sequelize.STRING
+    type: Sequelize.STRING,
+    allowNull: false
   },
   email: {
-    type: Sequelize.STRING
+    type: Sequelize.STRING,
+    allowNull: false
   },
   username: {
-    type: Sequelize.STRING
+    type: Sequelize.STRING,
+    allowNull: false
   },
   userId: {
     type: Sequelize.STRING,
@@ -46,12 +50,17 @@ const articles = sequelize.define('articles', {
     type: Sequelize.STRING,
     allowNull: false
   },
+  username: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
   title: {
     type: Sequelize.STRING,
     allowNull: false
   },
   description: {
-    type: Sequelize.STRING
+    type: Sequelize.STRING,
+    allowNull: false
   },
   fileURL: {
     type: Sequelize.STRING,
@@ -61,24 +70,29 @@ const articles = sequelize.define('articles', {
 
 const comments = sequelize.define('comments', {
   commentId: {
-    type: Sequelize.STRING
+    type: Sequelize.STRING,
+    allowNull: false
   },
   articleId: {
-    type: Sequelize.STRING
+    type: Sequelize.STRING,
+    allowNull: false
   },
   userId: {
-    type: Sequelize.STRING
+    type: Sequelize.STRING,
+    allowNull: false
   },
   content: {
-    type: Sequelize.TEXT
+    type: Sequelize.TEXT,
+    allowNull: false
   },
-  time: {
-    type: Sequelize.DATE
+  date: {
+    type: Sequelize.DATEONLY,
+    allowNull: false
   },
 })
 
-sequelize.sync();
-//sequelize.sync({ force: true });
+//sequelize.sync();
+sequelize.sync({ force: true });
 //Used to update database when making modifications to tables
 //TODO REMOVE FORCE BEFORE IT IS IN PRODUCTION
 
@@ -94,6 +108,13 @@ app.get('/sqlTest', function (req, res){
 	    //console.error('Unable to connect to the database:', err);
       res.send("Unable to connect to the database:", err);
 	  });
+})
+
+//Work on this
+app.get('/api/v1/articles/random', function (req, res) {
+  articles.find({ order: [ Sequelize.fn( 'RAND' ), ] }).then(articles => {
+    res.json(articles)
+  });
 })
 
 app.get('/api/v1/articles/:articleId', function (req, res) {
@@ -147,11 +168,13 @@ app.get('/api/v1/users/comments/:userId', function (req, res) {
 genCommentIdAndCreate = (inArticleId, inUserId, inContent) => {
   return new Promise((resolve, reject) => {
     const newId = shortid.generate();
+    const newDate = new Date();
+    const inDate = (newDate.getFullYear() + "-" + (newDate.getMonth()+1) + "-" + newDate.getDate());
     comments.findOrCreate({ 
       //Find if comment ID exist
       where: { commentId: newId }, 
       //Set things if it doesn't exist
-      defaults: { articleId: inArticleId, userId: inUserId, content: inContent } }).spread((comment, created) => {
+      defaults: { articleId: inArticleId, userId: inUserId, content: inContent, date: inDate } }).spread((comment, created) => {
         if(created){
           //Successfully created ID
           resolve(newId);
@@ -175,6 +198,11 @@ app.post('/api/v1/comments/addComment', function (req, res) {
   }else{
     res.status(400).send({ 'error': 'You must include in body: aricleId, commentId, userId, and content' });
   }
+})
+
+app.post('/api/v1/articles/create', function (req, res) {
+  //Mark creation of article
+  const body = req.body;
 })
 
 app.listen(3000, function () {
