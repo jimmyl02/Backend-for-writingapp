@@ -19,6 +19,10 @@ const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, proces
 });
 
 const users = sequelize.define('users', {
+  userId: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
   firstName: {
     type: Sequelize.STRING,
     allowNull: false
@@ -34,10 +38,6 @@ const users = sequelize.define('users', {
   username: {
     type: Sequelize.STRING,
     allowNull: false
-  },
-  userId: {
-    type: Sequelize.STRING,
-    allowNull: false
   }
 });
 
@@ -47,10 +47,6 @@ const articles = sequelize.define('articles', {
     allowNull: false
   },
   userId: {
-    type: Sequelize.STRING,
-    allowNull: false
-  },
-  username: {
     type: Sequelize.STRING,
     allowNull: false
   },
@@ -87,8 +83,8 @@ const comments = sequelize.define('comments', {
   },
 })
 
-//sequelize.sync();
-sequelize.sync({ force: true });
+sequelize.sync();
+//sequelize.sync({ force: true });
 //Used to update database when making modifications to tables
 //TODO REMOVE FORCE BEFORE IT IS IN PRODUCTION
 
