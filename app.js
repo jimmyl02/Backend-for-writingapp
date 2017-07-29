@@ -229,7 +229,7 @@ app.post('/api/v1/articles/create', function (req, res) {
   if(body.hasOwnProperty('userId') && body.hasOwnProperty('title') && body.hasOwnProperty('description') && body.hasOwnProperty('fileURL')){
     //Generate commentId in backend, return commentId
     genArticleIdAndCreate(body.userId, body.title, body.description, body.fileURL).then((newId) => {
-      res.json({ commentId: newId });
+      res.json({ articleId: newId });
     })
   }else{
     res.status(400).send({ 'error': 'You must include in body: userId, title, description, and fileURL' });
