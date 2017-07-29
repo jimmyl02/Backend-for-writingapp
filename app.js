@@ -72,9 +72,6 @@ const comments = sequelize.define('comments', {
   content: {
     type: Sequelize.TEXT
   },
-  time: {
-    type: Sequelize.DATE
-  },
 })
 
 sequelize.sync();
@@ -106,6 +103,17 @@ app.get('/api/v1/articles/:articleId', function (req, res) {
       res.status(404).send({});
     }
   })
+})
+
+app.get('/api/v1/articles/random', function (req, res) {
+  articles.findOne({ order:  Sequelize.fn( 'RAND' ) }).then(article => {
+      if(article.length > 0){
+        res.json(article);
+      }else{
+        //res.json(article);
+        res.status(404).send({});
+      }
+  });
 })
 
 app.get('/api/v1/comments/:articleId', function (req, res) {
@@ -173,7 +181,40 @@ app.post('/api/v1/comments/addComment', function (req, res) {
       res.json({ commentId: newId });
     })
   }else{
-    res.status(400).send({ 'error': 'You must include in body: aricleId, commentId, userId, and content' });
+    res.status(400).send({ 'error': 'You must include in body: aricleId, userId, and content' });
+  }
+})
+
+genArticleIdAndCreate = (inUserId, inTitle, inDescription, inFileURL) => {
+  return new Promise((resolve, reject) => {
+    const newId = shortid.generate();
+    articles.findOrCreate({ 
+      //Find if comment ID exist
+      where: { articleId: newId }, 
+      //Set things if it doesn't exist
+      defaults: {userId: inUserId, title: inTitle, description: inDescription, fileURL: inFileURL } }).spread((comment, created) => {
+        if(created){
+          //Successfully created ID
+          resolve(newId);
+        }else{
+          //Generation failed
+          genArticleIdAndCreate(inUserId, inTitle, inDescription, inFileURL);
+        }
+    })
+  })
+}
+
+app.post('/api/v1/articles/create', function (req, res) {
+  //Add comment to article
+  const body = req.body;
+  //Required info check
+  if(body.hasOwnProperty('userId') && body.hasOwnProperty('title') && body.hasOwnProperty('description') && body.hasOwnProperty('fileURL')){
+    //Generate commentId in backend, return commentId
+    genArticleIdAndCreate(body.userId, body.title, body.description, body.fileURL).then((newId) => {
+      res.json({ commentId: newId });
+    })
+  }else{
+    res.status(400).send({ 'error': 'You must include in body: userId, title, description, and fileURL' });
   }
 })
 
