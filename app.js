@@ -121,17 +121,6 @@ app.get('/api/v1/articles/:articleId', function (req, res) {
   })
 })
 
-app.get('/api/v1/articles/random', function (req, res) {
-  articles.findOne({ order:  Sequelize.fn( 'RAND' ) }).then(article => {
-      if(article.length > 0){
-        res.json(article);
-      }else{
-        //res.json(article);
-        res.status(404).send({});
-      }
-  });
-})
-
 app.get('/api/v1/comments/:articleId', function (req, res) {
   const reqArticleId = req.params.articleId;
   comments.findAll({ where: { articleId: reqArticleId } }).then(comments => {
