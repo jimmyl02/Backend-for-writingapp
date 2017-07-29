@@ -240,11 +240,6 @@ app.post('/api/v1/articles/create', function (req, res) {
   }
 })
 
-app.post('/api/v1/articles/create', function (req, res) {
-  //Mark creation of article
-  const body = req.body;
-})
-
 app.listen(3000, function () {
   console.log('Listening on port 3000')
 })
