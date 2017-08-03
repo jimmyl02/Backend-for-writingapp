@@ -155,6 +155,17 @@ app.get('/api/v1/users/comments/:userId', function (req, res) {
   })
 })
 
+app.get('/api/v1/users/username/:userId', function (req, res) {
+  const reqUserId = req.params.userId;
+  users.findOne({ where: { userId: reqUserId } }).then(user => {
+    if(comments.length > 0){
+      res.json(comments);
+    }else{
+      res.status(404).send({});
+    }
+  })
+})
+
 //Create post routes
 
 genCommentIdAndCreate = (inArticleId, inUserId, inContent) => {
