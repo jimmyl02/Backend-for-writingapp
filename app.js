@@ -158,11 +158,21 @@ app.get('/api/v1/users/comments/:userId', function (req, res) {
 app.get('/api/v1/users/username/:userId', function (req, res) {
   const reqUserId = req.params.userId;
   users.findOne({ where: { userId: reqUserId } }).then(user => {
-    if(comments.length > 0){
-      res.json(comments);
+    if(user != null){
+      res.json(user);
     }else{
       res.status(404).send({});
     }
+  })
+})
+
+app.get('/api/v1/hidden/userGen', function (req, res) {
+  const newId = '1';
+  users.findOrCreate({ 
+    //Find if comment ID exist
+    where: { userId: newId }, 
+    //Set things if it doesn't exist
+    defaults: { firstName: 'Jimmy', lastName: 'Li', email: 'jimmyli2002@gmail.com', username: 'jimfutsu' } }).spread((comment, created) => {
   })
 })
 
