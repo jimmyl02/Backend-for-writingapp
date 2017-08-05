@@ -140,7 +140,7 @@ app.get('/api/v1/articles/content/:articleId', function (req, res) {
   const reqArticleId = req.params.articleId;
   articleContent.findOne({ where: { articleId: reqArticleId } }).then(article => {
     //Returns article with specified id as in route
-    if(article.length > 0){
+    if(article != null){
       res.json(article);
     }else{
       res.status(404).send({});
