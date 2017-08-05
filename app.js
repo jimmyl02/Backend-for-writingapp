@@ -3,10 +3,14 @@ const express = require('express');
 const Sequelize = require('sequelize');
 const bodyParser = require('body-parser');
 const shortid = require('shortid');
+//const jwt = require('jsonwebtoken');
+const nJwt = require('njwt');
 
 const app = express();
-app.use(bodyParser.json())
+const protectCheckRouter = express.Router();
+app.use(bodyParser.json());
 
+app.set('token', process.env.secret);
 
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS, {
   host: process.env.DB_HOST,
@@ -205,16 +209,104 @@ app.get('/api/v1/hidden/userGen', function (req, res) {
 
 //Create post routes
 
+//USERS STUFF
+
+genUserIdAndCreate = (inFirstName, inLastName, inUsername, inEmail, inPassword) => {
+  return new Promise((resolve, reject) => {
+    const newId = shortid.generate();
+    users.findOrCreate({ 
+      //Find if comment ID exist
+      where: { userId: newId }, 
+      //Set things if it doesn't exist
+      defaults: { firstName: inFirstName, lastName: inLastName, username: inUsername, email: inEmail, password: inPassword } }).spread((comment, created) => {
+        if(created){
+          //Successfully created ID
+          resolve(newId);
+        }else{
+          //Generation failed
+          genUserIdAndCreate(inFirstName, inLastName, inUsername, inEmail, inPassword);
+        }
+    })
+  })
+}
+
+app.post('/api/v1/users/create', function (req, res) {
+  const body = req.body;
+  if(body.hasOwnProperty('firstName') && body.hasOwnProperty('lastName') && body.hasOwnProperty('username') && body.hasOwnProperty('email') && body.hasOwnProperty('password')){
+    genUserIdAndCreate(body.firstName, body.lastName, body.username, body.email, body.password)
+    .then(newId => res.json({ userId: newId }))
+  }else{
+    res.status(400).send({ 'error': 'You must include in body: firstName, lastName, username, email, and password' });
+  }
+})
+
+findAndValidate = (inUsername, inPassword) => {
+  return new Promise((resolve, reject) => {
+    users.findOne({ where: { username: inUsername } }).then(user => {
+      if(user != null){
+        if(user.password == inPassword){
+          resolve(true);
+        }else{
+          resolve(false);
+        }
+      }else{
+        resolve(false);
+      }
+    })
+  })
+}
+
+app.post('/api/v1/users/auth', function (req, res) {
+  const body = req.body;
+  if(body.hasOwnProperty('username') && body.hasOwnProperty('password')){
+    findAndValidate(body.username, body.password).then(ver => {
+      if(ver){
+        //Matches
+        const jwt = nJwt.create(body.username, app.get('token'));
+        var token = jwt.compact();
+        res.json({
+          success: true,
+          token: token
+        })
+      }else{
+        //Error
+        res.status(403).send({ 'error': 'The username and password combiniation does not match' })
+      }
+    })
+  }else{
+    res.status(400).send({ 'error': 'You must include in body: username, and password' });
+  }
+})
+
+//AUTHENTICATION MIDDLEWARE
+protectCheckRouter.use(function(req, res, next){
+  var token = req.headers['x-access-token'];
+
+  if(token) {
+    const verifiedJwt = nJwt.verify(token, app.get('token'), function(err, decoded){
+      if(err){
+        //Error
+        res.status(403).send({ error: 'Bad JSON Web Token' });
+      }else{
+        //Verified
+        req.decoded = decoded;
+        next();
+      }
+    });
+  }else{
+    res.status(400).send({ 'error': 'You must send a JSON Web Token in the header with x-access-token' })
+  }
+})
+
+//Authenticated Routes
 genCommentIdAndCreate = (inArticleId, inUserId, inContent) => {
   return new Promise((resolve, reject) => {
     const newId = shortid.generate();
-    const newDate = new Date();
-    const inDate = (newDate.getFullYear() + "-" + (newDate.getMonth()+1) + "-" + newDate.getDate());
     comments.findOrCreate({ 
       //Find if comment ID exist
       where: { commentId: newId }, 
       //Set things if it doesn't exist
-      defaults: { articleId: inArticleId, userId: inUserId, content: inContent, date: inDate } }).spread((comment, created) => {
+      defaults: { articleId: inArticleId, userId: inUserId, content: inContent } }).spread((comment, created) => {
         if(created){
           //Successfully created ID
           resolve(newId);
@@ -226,7 +318,7 @@ genCommentIdAndCreate = (inArticleId, inUserId, inContent) => {
   })
 }
 
-app.post('/api/v1/comments/addComment', function (req, res) {
+protectCheckRouter.post('/comments/addComment', function (req, res) {
   //Add comment to article
   const body = req.body;
   //Required info check
@@ -270,7 +362,7 @@ genArticleContent = (inArticleId, inArticleContent) => {
   })
 }
 
-app.post('/api/v1/articles/create', function (req, res) {
+protectCheckRouter.post('/articles/create', function (req, res) {
   //Add comment to article
   const body = req.body;
   //Required info check
@@ -284,6 +376,8 @@ app.post('/api/v1/articles/create', function (req, res) {
     res.status(400).send({ 'error': 'You must include in body: userId, title, description, and fileURL' });
   }
 })
+
+app.use('/api/v1/protected', protectCheckRouter);
 
 app.listen(3000, function () {
   console.log('Listening on port 3000')
