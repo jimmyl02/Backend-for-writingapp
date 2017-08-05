@@ -68,6 +68,17 @@ const articles = sequelize.define('articles', {
   },
 });
 
+const articleContent = sequelize.define('articleContent', {
+  articleId: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  content: {
+    type: Sequelize.TEXT,
+    allowNull: false
+  }
+});
+
 const comments = sequelize.define('comments', {
   commentId: {
     type: Sequelize.STRING,
@@ -218,15 +229,18 @@ app.post('/api/v1/comments/addComment', function (req, res) {
 })
 
 genArticleIdAndCreate = (inUserId, inTitle, inDescription, inFileURL) => {
+  //inFileURL TEMPORARILY ACTUAL CONTENT
   return new Promise((resolve, reject) => {
     const newId = shortid.generate();
     articles.findOrCreate({ 
       //Find if comment ID exist
       where: { articleId: newId }, 
       //Set things if it doesn't exist
-      defaults: {userId: inUserId, title: inTitle, description: inDescription, fileURL: inFileURL } }).spread((comment, created) => {
+      defaults: {userId: inUserId, title: inTitle, description: inDescription, fileURL: "inFileURL" } 
+    }).spread((comment, created) => {
         if(created){
           //Successfully created ID
+          genArticleContent(newId, inFileURL);
           resolve(newId);
         }else{
           //Generation failed
@@ -236,12 +250,21 @@ genArticleIdAndCreate = (inUserId, inTitle, inDescription, inFileURL) => {
   })
 }
 
+genArticleContent = (inArticleId, inArticleContent) => {
+  articleContent.findOrCreate({
+    //Find if article ID exist
+    where: { articleId: inArticleId },
+    defaults: { content: inArticleContent }
+  })
+}
+
 app.post('/api/v1/articles/create', function (req, res) {
   //Add comment to article
   const body = req.body;
   //Required info check
   if(body.hasOwnProperty('userId') && body.hasOwnProperty('title') && body.hasOwnProperty('description') && body.hasOwnProperty('fileURL')){
-    //Generate commentId in backend, return commentId
+    //FileURL temporarily ACTUAL CONTENT
+    //Generate articleId in backend, return articleId
     genArticleIdAndCreate(body.userId, body.title, body.description, body.fileURL).then((newId) => {
       res.json({ articleId: newId });
     })
