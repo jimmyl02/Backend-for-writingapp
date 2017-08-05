@@ -136,6 +136,18 @@ app.get('/api/v1/articles/:articleId', function (req, res) {
   })
 })
 
+app.get('/api/v1/articles/content/:articleId', function (req, res) {
+  const reqArticleId = req.params.articleId;
+  articleContent.findAll({ where: { articleId: reqArticleId } }).then(article => {
+    //Returns article with specified id as in route
+    if(article.length > 0){
+      res.json(article);
+    }else{
+      res.status(404).send({});
+    }
+  })
+})
+
 app.get('/api/v1/comments/:articleId', function (req, res) {
   const reqArticleId = req.params.articleId;
   comments.findAll({ where: { articleId: reqArticleId } }).then(comments => {
