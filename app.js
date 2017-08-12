@@ -197,6 +197,17 @@ app.get('/api/v1/users/username/:userId', function (req, res) {
   })
 })
 
+app.get('/api/v1/users/userId/:username', function (req, res) {
+  const reqUsername = req.params.username;
+  users.findOne({ where: { username: reqUsername }, attributes: ['userId'] }).then(user => {
+    if(user != null){
+      res.json(user);
+    }else{
+      res.status(404).send({});
+    }
+  })
+})
+
 app.get('/api/v1/hidden/userGen', function (req, res) {
   const newId = '1';
   users.findOrCreate({ 
